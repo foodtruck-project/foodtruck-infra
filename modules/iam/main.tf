@@ -1,88 +1,36 @@
-data "aws_iam_policy_document" "github_actions_policy" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "s3:ListBucket",
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:DeleteObject",
-      "s3:GetObjectVersion",
-      "s3:PutObjectAcl",
-      "s3:GetBucketLocation",
-      "s3:ListAllMyBuckets"
-    ]
-    resources = [
-      "arn:aws:s3:::*",
-      "arn:aws:s3:::*/*"
-    ]
-  }
+data "aws_caller_identity" "current" {}
 
-  statement {
-    effect = "Allow"
-    actions = [
-      "ec2:*"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = ["iam:PassRole"]
-    resources = ["arn:aws:iam::${var.account_id}:role/*"]
-  }
+data "aws_iam_policy" "administrator_access" {
+  arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
-data "aws_iam_policy_document" "admin_trust_policy" {
-  statement {
-    effect = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::${var.account_id}:root"]
-    }
-  }
-}
+resource "aws_iam_openid_connect_provider" "github_actions" {
+  url             = "https://token.actions.githubusercontent.com"
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
 
-data "aws_iam_policy_document" "github_actions_trust_policy" {
-  count = var.github_actions_role_arn != null ? 1 : 0
-  
-  statement {
-    effect = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "AWS"
-      identifiers = [var.github_actions_role_arn]
-    }
-  }
-}
-
-resource "aws_iam_policy" "github_actions_policy" {
-  name        = "${var.github_actions_role_name}Policy"
-  description = "Limited permissions for GitHub Actions: S3 sync and EC2 root access"
-  policy      = data.aws_iam_policy_document.github_actions_policy.json
-  tags        = var.tags
+  tags = var.tags
 }
 
 resource "aws_iam_role" "admin_role" {
-  name               = var.admin_role_name
+  name               = "FoodTruckFull"
   assume_role_policy = data.aws_iam_policy_document.admin_trust_policy.json
   tags               = var.tags
 }
 
 resource "aws_iam_role_policy_attachment" "admin_role_policy" {
   role       = aws_iam_role.admin_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+  policy_arn = data.aws_iam_policy.administrator_access.arn
 }
 
+# GitHub Actions Role with OIDC trust policy
 resource "aws_iam_role" "github_actions_role" {
-  count              = var.github_actions_role_arn != null ? 1 : 0
-  name               = var.github_actions_role_name
-  assume_role_policy = data.aws_iam_policy_document.github_actions_trust_policy[0].json
+  name               = "FoodTruckGithubActions"
+  assume_role_policy = data.aws_iam_policy_document.github_actions_trust_policy.json
   tags               = var.tags
 }
 
 resource "aws_iam_role_policy_attachment" "github_actions_role_policy" {
-  count      = var.github_actions_role_arn != null ? 1 : 0
-  role       = aws_iam_role.github_actions_role[0].name
+  role       = aws_iam_role.github_actions_role.name
   policy_arn = aws_iam_policy.github_actions_policy.arn
 }

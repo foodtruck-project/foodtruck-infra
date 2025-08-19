@@ -4,6 +4,6 @@ output "admin_role_arn" {
 }
 
 output "github_actions_role_arn" {
-  description = "ARN of the GitHub Actions IAM role (null if not created)"
-  value       = length(aws_iam_role.github_actions_role) > 0 ? aws_iam_role.github_actions_role[0].arn : null
+  description = "ARN of the GitHub Actions IAM role"
+  value       = aws_iam_role.github_actions_role.arn
 }
