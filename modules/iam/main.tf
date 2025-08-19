@@ -20,13 +20,7 @@ data "aws_iam_policy_document" "github_actions_policy" {
   statement {
     effect = "Allow"
     actions = [
-      "ec2:*",
-      "ssm:SendCommand",
-      "ssm:ListCommandInvocations",
-      "ssm:DescribeInstanceInformation",
-      "ssm:GetCommandInvocation",
-      "ssm:StartSession",
-      "ssm:TerminateSession"
+      "ec2:*"
     ]
     resources = ["*"]
   }
