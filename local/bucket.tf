@@ -34,7 +34,7 @@ locals {
 locals {
   website_files_filtered = [
     for file in fileset("${path.module}/foodtruck-website", "**") :
-    file if startswith(file, "public/") || startswith(file, "assets/")
+    file if startswith(file, "public/") || startswith(file, "assets/") || startswith(file, "index.html")
   ]
 }
 
