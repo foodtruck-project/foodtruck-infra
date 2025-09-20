@@ -55,11 +55,6 @@ resource "aws_s3_bucket_ownership_controls" "foodtruck_website_ownership" {
   }
 }
 
-resource "aws_s3_bucket_acl" "bucket-acl" {
-  bucket = aws_s3_bucket.foodtruck_website_bucket.id
-  acl    = "public-read"
-}
-
 resource "aws_s3_bucket_public_access_block" "foodtruck_website_access_block" {
   bucket = aws_s3_bucket.foodtruck_website_bucket.id
 
