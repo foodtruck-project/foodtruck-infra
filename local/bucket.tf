@@ -11,7 +11,7 @@ resource "aws_s3_bucket_website_configuration" "foodtruck_website" {
   bucket = aws_s3_bucket.foodtruck_website_bucket.id
 
   index_document {
-    suffix = "index.html"
+    suffix = "public/index.html"
   }
 }
 
@@ -33,14 +33,8 @@ locals {
 
 locals {
   website_files_filtered = [
-    for f in fileset("${path.module}/foodtruck-website", "**") :
-    f
-    if !startswith(f, "tests/")
-      && f != "README.md"
-      && f != "LICENSE"
-      && f != ".gitignore"
-      && !startswith(f, ".")
-      && f != ".DS_Store"
+    for file in fileset("${path.module}/foodtruck-website", "**") :
+    file if startswith(file, "public/") || startswith(file, "assets/")
   ]
 }
 
@@ -77,10 +71,10 @@ resource "aws_s3_bucket_policy" "foodtruck_website_public_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
+        Effect    = "Allow"
         Principal = "*"
-        Action = ["s3:GetObject"]
-        Resource = ["${aws_s3_bucket.foodtruck_website_bucket.arn}/*"]
+        Action    = ["s3:GetObject"]
+        Resource  = ["${aws_s3_bucket.foodtruck_website_bucket.arn}/*"]
       }
     ]
   })
