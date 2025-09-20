@@ -39,7 +39,6 @@ locals {
       && f != "README.md"
       && f != "LICENSE"
       && f != ".gitignore"
-      && !startswith(f, "node_modules/")
       && !startswith(f, ".")
       && f != ".DS_Store"
   ]
