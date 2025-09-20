@@ -11,7 +11,7 @@ resource "aws_s3_bucket_website_configuration" "foodtruck_website" {
   bucket = aws_s3_bucket.foodtruck_website_bucket.id
 
   index_document {
-    suffix = "public/index.html"
+    suffix = "index.html"
   }
 }
 
@@ -55,6 +55,11 @@ resource "aws_s3_bucket_ownership_controls" "foodtruck_website_ownership" {
   }
 }
 
+resource "aws_s3_bucket_acl" "bucket-acl" {
+  bucket = aws_s3_bucket.foodtruck_website_bucket.id
+  acl    = "public-read"
+}
+
 resource "aws_s3_bucket_public_access_block" "foodtruck_website_access_block" {
   bucket = aws_s3_bucket.foodtruck_website_bucket.id
 
@@ -64,18 +69,23 @@ resource "aws_s3_bucket_public_access_block" "foodtruck_website_access_block" {
   restrict_public_buckets = false
 }
 
+data "aws_iam_policy_document" "iam-policy-1" {
+  statement {
+    sid    = "AllowPublicRead"
+    effect = "Allow"
+    resources = [
+      "${aws_s3_bucket.foodtruck_website_bucket.arn}",
+      "${aws_s3_bucket.foodtruck_website_bucket.arn}/*",
+    ]
+    actions = ["S3:GetObject"]
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+  }
+}
+
 resource "aws_s3_bucket_policy" "foodtruck_website_public_policy" {
   bucket = aws_s3_bucket.foodtruck_website_bucket.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect    = "Allow"
-        Principal = "*"
-        Action    = ["s3:GetObject"]
-        Resource  = ["${aws_s3_bucket.foodtruck_website_bucket.arn}/*"]
-      }
-    ]
-  })
+  policy = data.aws_iam_policy_document.iam-policy-1.json
 }
