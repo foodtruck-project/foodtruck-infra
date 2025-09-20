@@ -31,8 +31,22 @@ locals {
   }
 }
 
+locals {
+  website_files_filtered = [
+    for f in fileset("${path.module}/foodtruck-website", "**") :
+    f
+    if !startswith(f, "tests/")
+      && f != "README.md"
+      && f != "LICENSE"
+      && f != ".gitignore"
+      && !startswith(f, "node_modules/")
+      && !startswith(f, ".")
+      && f != ".DS_Store"
+  ]
+}
+
 resource "aws_s3_object" "website_files" {
-  for_each = { for f in fileset("${path.module}/foodtruck-website", "**") : f => f if !startswith(f, "tests/") && f != "README.md" && f != "LICENSE" && f != ".gitignore" }
+  for_each = { for f in local.website_files_filtered : f => f }
 
   bucket       = aws_s3_bucket.foodtruck_website_bucket.id
   key          = each.value
